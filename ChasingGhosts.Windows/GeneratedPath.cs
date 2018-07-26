@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using Sharp2D.Engine.Common;
+using Sharp2D.Engine.Common.Components.Animations;
+using Sharp2D.Engine.Common.Components.Animations.Predefined;
 using Sharp2D.Engine.Common.Components.Sprites;
 using Sharp2D.Engine.Common.ObjectSystem;
 using Sharp2D.Engine.Common.World;
@@ -98,26 +100,48 @@ namespace ChasingGhosts.Windows
         }
     }
 
-    public class ShoePrint : WorldObject
+    public class ShoePrint : WorldObject, IShoePrint
     {
+        private Sprite shoeSprite;
+
         public ShoePrint(Vector2 localPosition, float turnDegrees, ShoeFoot foot)
         {
             this.LocalPosition = localPosition;
             this.LocalRotation = turnDegrees;
 
             const float Offset = 10;
-            var shoeSprite = Sprite.Load("shoe");
-            shoeSprite.CenterObject();
-            shoeSprite.SpriteEffect = foot == ShoeFoot.Right ? SpriteEffects.None : SpriteEffects.FlipVertically;
+            this.shoeSprite = Sprite.Load("shoe");
+            this.shoeSprite.CenterObject();
+            this.shoeSprite.SpriteEffect = foot == ShoeFoot.Right ? SpriteEffects.None : SpriteEffects.FlipVertically;
             this.Add(
                 new WorldObject
                 {
                     LocalPosition = new Vector2(0, foot == ShoeFoot.Right ? Offset : -Offset),
                     Components =
                     {
-                        shoeSprite
+                        this.shoeSprite
                     }
                 });
         }
+
+        public bool IsActive { get; private set; } = true;
+
+        public void Dismiss()
+        {
+            this.IsActive = false;
+            var animation = ValueAnimator.PlayAnimation(this, val => this.shoeSprite.Tint = Color.White * val, TimeSpan.FromSeconds(1));
+            animation.Easing = AnimationEase.CubicEaseInOut;
+            animation.Loop = false;
+            animation.Inverse = true;
+        }
+    }
+
+    public interface IShoePrint
+    {
+        bool IsActive { get; }
+
+        void Dismiss();
+
+        Rectanglef GlobalRegion { get; }
     }
 }

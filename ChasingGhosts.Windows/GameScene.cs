@@ -67,8 +67,6 @@ namespace ChasingGhosts.Windows
                 }
             });
 
-            //this.GeneratePath(camera);
-
             var generatedPath = new GeneratedPath();
             this.WorldRoot.Add(generatedPath);
             generatedPath.CreatePath(this.player.GlobalPosition);
@@ -79,87 +77,6 @@ namespace ChasingGhosts.Windows
             this.WorldRoot.Add(this.player);
 
             base.Initialize(resolver);
-        }
-
-        private void GeneratePath(Camera cam)
-        {
-            var points = new[]
-            {
-                new Vector2(19, 27),
-                new Vector2(79, 52),
-                //new Vector2(122, 79),
-                new Vector2(121, 118),
-                new Vector2(114, 196),
-                new Vector2(84, 284),
-                new Vector2(79, 427),
-                new Vector2(111, 564),
-                new Vector2(265, 683),
-                new Vector2(649, 702),
-                new Vector2(963, 718),
-                new Vector2(1109, 637),
-                new Vector2(1165, 507),
-                new Vector2(1158, 330),
-                new Vector2(1085, 207),
-                new Vector2(822, 144),
-                new Vector2(573, 132),
-                new Vector2(419, 172),
-                new Vector2(264, 97),
-                new Vector2(290, 32),
-                new Vector2(373, 13),
-            };
-
-            foreach (var position in points)
-            {
-                var pos = Resolution.TransformPointToWorld(position, cam);
-                this.WorldRoot.Add(new WorldObject
-                {
-                    LocalPosition = pos,
-                    Components =
-                    {
-                        new Sprite(Color.Yellow, 5, 5)
-                    }
-                });
-            }
-
-            var foot = ShoeFoot.Right;
-
-            for (var i = 0; i < points.Length - 1; i++)
-            {
-                var here = Resolution.TransformPointToWorld(points[i], cam);
-                var next = Resolution.TransformPointToWorld(points[i + 1], cam);
-                var degrees = MathHelper.ToDegrees((float)Math.Atan2(next.Y - here.Y, next.X - here.X));
-                
-                const float Threshold = 40f;
-                while (Vector2.Distance(here, next) > Threshold)
-                {
-                    const float Offset = 10;
-
-                    var distance = next - here;
-                    distance.Normalize();
-                    distance *= Threshold;
-                    here += distance;
-                    var shoeSprite = Sprite.Load("shoe");
-                    shoeSprite.CenterObject();
-                    shoeSprite.SpriteEffect = foot == ShoeFoot.Right ? SpriteEffects.None : SpriteEffects.FlipVertically;
-                    this.WorldRoot.Add(new WorldObject
-                    {
-                        LocalPosition = here,
-                        LocalRotation = degrees,
-                        Children =
-                        {
-                            new WorldObject
-                            {
-                                LocalPosition = new Vector2(0, foot == ShoeFoot.Right ? Offset : -Offset),
-                                Components =
-                                {
-                                    shoeSprite
-                                }
-                            }
-                        }
-                    });
-                    foot = foot == ShoeFoot.Left ? ShoeFoot.Right : ShoeFoot.Left;
-                }
-            }
         }
     }
 
@@ -173,29 +90,89 @@ namespace ChasingGhosts.Windows
     {
         private readonly List<IWall> walls = new List<IWall>();
         private readonly List<IMovableCharacter> characters = new List<IMovableCharacter>();
+        private readonly List<IShoePrint> shoeprints = new List<IShoePrint>();
 
         public override void Initialize(IResolver resolver)
         {
             base.Initialize(resolver);
-            foreach (var obj in this.Parent.GetAllChildren())
-            {
-                if (obj is IWall w)
-                {
-                    this.walls.Add(w);
-                }
 
-                if (obj is IMovableCharacter mc)
-                {
+            this.Hook(this.Parent);
+        }
+
+        private void Hook(GameObject obj)
+        {
+            obj.ChildObjectMoved -= Item_ChildObjectMoved;
+            obj.ChildObjectMoved += Item_ChildObjectMoved;
+
+            if (obj is IWall w)
+            {
+                if (!this.walls.Contains(w))
+                    this.walls.Add(w);
+            }
+
+            if (obj is IMovableCharacter mc)
+            {
+                if (!this.characters.Contains(mc))
                     this.characters.Add(mc);
+            }
+
+            if (obj is IShoePrint sp)
+            {
+                if (!this.shoeprints.Contains(sp))
+                    this.shoeprints.Add(sp);
+            }
+
+            foreach (var child in obj.Children)
+            {
+                this.Hook(child);
+            }
+        }
+
+        private void Item_ChildObjectMoved(GameObject sender, ChildObjectMovedArgs args)
+        {
+            switch (args.Action)
+            {
+                case ChildObjectMoveAction.Added:
+                case ChildObjectMoveAction.Inserted:
+                    this.Hook(args.Child);
+                    break;
+                case ChildObjectMoveAction.Removed:
+                    args.Child.ChildObjectMoved -= this.Item_ChildObjectMoved;
+                    break;
+            }
+        }
+
+        public override void Update(GameTime time)
+        {
+            base.Update(time);
+
+            this.HandleMovement(time);
+
+            this.HandlePlayerPrints();
+        }
+
+        private void HandlePlayerPrints()
+        {
+            var player = this.characters.OfType<Player>().First();
+            var plrReg = player.GlobalRegion;
+            foreach (var print in this.shoeprints.ToArray())
+            {
+                if (!print.IsActive)
+                {
+                    this.shoeprints.Remove(print);
+                    continue;
+                }
+                var center = print.GlobalRegion.Center;
+                if (plrReg.Contains((int)center.X, (int)center.Y))
+                {
+                    print.Dismiss();
                 }
             }
         }
 
-        public override void Update(GameTime gameTime)
+        private void HandleMovement(GameTime time)
         {
-            base.Update(gameTime);
-
-            var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            var elapsedSeconds = (float)time.ElapsedGameTime.TotalSeconds;
             foreach (var character in this.characters)
             {
                 var movement = character.Movement * elapsedSeconds;
@@ -208,11 +185,7 @@ namespace ChasingGhosts.Windows
 
                 foreach (var wall in this.walls)
                 {
-                    var endRegion = new Rectanglef(
-                        startRegion.X + movement.X,
-                        startRegion.Y + movement.Y,
-                        startRegion.Width,
-                        startRegion.Height);
+                    var endRegion = new Rectanglef(startRegion.X + movement.X, startRegion.Y + movement.Y, startRegion.Width, startRegion.Height);
 
                     var wallReg = wall.GlobalRegion;
                     if (!wallReg.Intersects(endRegion))
