@@ -67,14 +67,16 @@ namespace ChasingGhosts.Windows
                 }
             });
 
-            this.GeneratePath(camera);
+            //this.GeneratePath(camera);
 
-            this.WorldRoot.Add(this.player);
-
-            this.WorldRoot.Add(new GeneratedPath());
+            var generatedPath = new GeneratedPath();
+            this.WorldRoot.Add(generatedPath);
+            generatedPath.CreatePath(this.player.GlobalPosition);
 
             this.physics = new PhysicsEngine();
             this.WorldRoot.Components.Add(this.physics);
+
+            this.WorldRoot.Add(this.player);
 
             base.Initialize(resolver);
         }
@@ -126,19 +128,7 @@ namespace ChasingGhosts.Windows
                 var here = Resolution.TransformPointToWorld(points[i], cam);
                 var next = Resolution.TransformPointToWorld(points[i + 1], cam);
                 var degrees = MathHelper.ToDegrees((float)Math.Atan2(next.Y - here.Y, next.X - here.X));
-
-                //var shoeSprite = Sprite.Load("shoe");
-                //shoeSprite.CenterObject();
-                //this.WorldRoot.Add(new WorldObject
-                //{
-                //    LocalPosition = here,
-                //    LocalRotation = degrees,
-                //    Components =
-                //    {
-                //        shoeSprite
-                //    }
-                //});
-
+                
                 const float Threshold = 40f;
                 while (Vector2.Distance(here, next) > Threshold)
                 {
