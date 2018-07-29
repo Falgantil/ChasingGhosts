@@ -1,5 +1,7 @@
 ﻿using System;
 
+using ChasingGhosts.Windows.Scenes;
+
 using Microsoft.Xna.Framework;
 
 using Sharp2D.Engine.Common;

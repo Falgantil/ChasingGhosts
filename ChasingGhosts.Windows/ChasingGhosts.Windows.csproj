@@ -41,8 +41,18 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="GameScene.cs" />
+    <Compile Include="UI\AnimatingBackground.cs" />
+    <Compile Include="UI\DeathScreen.cs" />
+    <Compile Include="Scenes\GameScene.cs" />
     <Compile Include="GeneratedPath.cs" />
+    <Compile Include="Interfaces\IMovableCharacter.cs" />
+    <Compile Include="Interfaces\IWall.cs" />
+    <Compile Include="UI\HealthBar.cs" />
+    <Compile Include="ViewModels\PlayerViewModel.cs" />
+    <Compile Include="World\PhysicsEngine.cs" />
+    <Compile Include="World\Player.cs" />
+    <Compile Include="World\ShoeFoot.cs" />
+    <Compile Include="World\Wall.cs" />
     <Compile Include="TopDownScene.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

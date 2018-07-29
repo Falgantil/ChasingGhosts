@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Sharp2D.Windows</name>
+    </assembly>
+    <members>
+        <member name="T:Sharp2D.Windows.Keyboard.CharEnteredHandler">
+            <summary>
+            Character Entered handler.
+            </summary>
+            <param name="sender">The sender.</param>
+            <param name="e">The <see cref="T:Sharp2D.Windows.Keyboard.CharacterEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="T:Sharp2D.Windows.Keyboard.EventInput">
+            <summary>
+            Static class for handling Win32 keyboard events.
+            </summary>
+        </member>
+        <member name="E:Sharp2D.Windows.Keyboard.EventInput.CharEntered">
+            <summary>
+            Event raised when a character has been entered.
+            </summary>
+        </member>
+        <member name="E:Sharp2D.Windows.Keyboard.EventInput.KeyDown">
+            <summary>
+            Event raised when a key has been pressed down. May fire multiple times due to keyboard repeat.
+            </summary>
+        </member>
+        <member name="E:Sharp2D.Windows.Keyboard.EventInput.KeyUp">
+            <summary>
+            Event raised when a key has been released.
+            </summary>
+        </member>
+        <member name="M:Sharp2D.Windows.Keyboard.EventInput.Initialize(Microsoft.Xna.Framework.GameWindow)">
+            <summary>
+            Initialize the TextInput with the given GameWindow.
+            </summary>
+            <param name="window">The XNA window to which text input should be linked.</param>
+        </member>
+        <member name="T:Sharp2D.Windows.Keyboard.CharacterEventArgs">
+            <summary>
+            Character Event Arguments
+            </summary>
+        </member>
+        <member name="M:Sharp2D.Windows.Keyboard.CharacterEventArgs.#ctor(System.Char,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sharp2D.Windows.Keyboard.CharacterEventArgs"/> class.
+            </summary>
+            <param name="character">The character.</param>
+            <param name="lParam">The l parameter.</param>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.Character">
+            <summary>
+            Gets the character.
+            </summary>
+            <value>
+            The character.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.Param">
+            <summary>
+            Gets the parameter.
+            </summary>
+            <value>
+            The parameter.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.RepeatCount">
+            <summary>
+            Gets the repeat count.
+            </summary>
+            <value>
+            The repeat count.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.ExtendedKey">
+            <summary>
+            Gets a value indicating whether [extended key].
+            </summary>
+            <value>
+              <c>true</c> if [extended key]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.AltPressed">
+            <summary>
+            Gets a value indicating whether [alt pressed].
+            </summary>
+            <value>
+              <c>true</c> if [alt pressed]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.PreviousState">
+            <summary>
+            Gets a value indicating whether [previous state].
+            </summary>
+            <value>
+              <c>true</c> if [previous state]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Sharp2D.Windows.Keyboard.CharacterEventArgs.TransitionState">
+            <summary>
+            Gets a value indicating whether [transition state].
+            </summary>
+            <value>
+              <c>true</c> if [transition state]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:Sharp2D.Windows.Keyboard.WindowsKeyboardManager">
+            <summary>
+            Windows Keyboard Manager.
+            </summary>
+        </member>
+        <member name="M:Sharp2D.Windows.Keyboard.WindowsKeyboardManager.#ctor(Sharp2D.Engine.Common.UI.Controls.TextBox)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sharp2D.Windows.Keyboard.WindowsKeyboardManager"/> class.
+            </summary>
+            <param name="parent"></param>
+        </member>
+        <member name="T:Sharp2D.Windows.Services.NetCoreFileService">
+            <summary>
+            .NET Core File Service, delegating calls to the File static.
+            </summary>
+        </member>
+        <member name="M:Sharp2D.Windows.Services.NetCoreFileService.Exists(System.String)">
+            <summary>
+            Determines if the file exists.
+            </summary>
+            <param name="path">The path.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Sharp2D.Windows.Services.NetCoreFileService.MapPath(System.String[])">
+            <summary>
+            Maps the path to be relative to the content root.
+            </summary>
+            <param name="paths">The paths.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Sharp2D.Windows.Services.NetCoreFileService.ReadAllText(System.String)">
+            <summary>
+            Reads all text from the specified file.
+            </summary>
+            <param name="filePath">The file path.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Sharp2D.Windows.Services.NetCoreFileService.WriteAllText(System.String,System.String)">
+            <summary>
+            Writes all text to the specified file.
+            </summary>
+            <param name="filePath">The file path.</param>
+            <param name="content">The content.</param>
+        </member>
+        <member name="M:Sharp2D.Windows.Services.NetCoreFileService.ReadStream(System.String)">
+            <summary>
+            Opens a read stream to the specified file.
+            </summary>
+            <param name="assetName">Name of the asset.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Sharp2D.Windows.Sharp2DWindowsApp">
+            <summary>
+            Windows implementation of Sharp2D application.
+            </summary>
+        </member>
+        <member name="P:Sharp2D.Windows.Sharp2DWindowsApp.WindowHandle">
+            <summary>
+            Gets or sets the window handle.
+            </summary>
+            <value>
+            The window handle.
+            </value>
+        </member>
+        <member name="M:Sharp2D.Windows.Sharp2DWindowsApp.#ctor(Sharp2D.Engine.Infrastructure.IResolver)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sharp2D.Windows.Sharp2DWindowsApp" /> class.
+            </summary>
+            <param name="resolver"></param>
+        </member>
+        <member name="M:Sharp2D.Windows.Sharp2DWindowsApp.CreateGame(Sharp2D.Engine.Common.SharpGameManager)">
+            <summary>
+            Creates the game.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Sharp2D.Windows.Sharp2DWindowsApp.RunGame(Sharp2D.Engine.Common.IGameHost)">
+            <summary>
+            Runs the game.
+            </summary>
+            <param name="game">The game.</param>
+        </member>
+        <member name="M:Sharp2D.Windows.Sharp2DWindowsApp.RegisterServices">
+            <summary>
+            Registers Windows-specific services.
+            </summary>
+        </member>
+    </members>
+</doc>

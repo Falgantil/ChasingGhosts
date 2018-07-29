@@ -1,91 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using ChasingGhosts.Windows.Interfaces;
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
-using Sharp2D.Engine.Common;
 using Sharp2D.Engine.Common.Components;
-using Sharp2D.Engine.Common.Components.Sprites;
 using Sharp2D.Engine.Common.ObjectSystem;
-using Sharp2D.Engine.Common.Scene;
-using Sharp2D.Engine.Common.World;
-using Sharp2D.Engine.Common.World.Camera;
-using Sharp2D.Engine.Helper;
 using Sharp2D.Engine.Infrastructure;
-using Sharp2D.Engine.Utility;
-using Sharp2D.Windows.Keyboard;
 
-namespace ChasingGhosts.Windows
+namespace ChasingGhosts.Windows.World
 {
-    public class GameScene : Scene
-    {
-        private Player player;
-
-        private PhysicsEngine physics;
-
-        public GameScene(IResolver resolver)
-            : base(resolver)
-        {
-        }
-
-        public override void Initialize(IResolver resolver)
-        {
-            this.player = new Player();
-            var camera = new Camera
-            {
-                MainCamera = true,
-
-                EnableMovementTracking = true,
-                Tracker = new CameraTracker
-                {
-                    Target = this.player,
-                    EnablePositionTracking = true
-                }
-            };
-            this.WorldRoot.Add(camera);
-
-            this.WorldRoot.Add(new Wall
-            {
-                LocalPosition = new Vector2(-400, 0),
-                Components =
-                {
-                    new Sprite(Color.Green, 128, 128)
-                }
-            });
-            this.WorldRoot.Add(new Wall
-            {
-                LocalPosition = new Vector2(-200, 0),
-                Components =
-                {
-                    new Sprite(Color.Green, 128, 128)
-                }
-            });
-
-            var generatedPath = new GeneratedPath();
-            this.WorldRoot.Add(generatedPath);
-            generatedPath.CreatePath(this.player.GlobalPosition);
-
-            this.physics = new PhysicsEngine();
-            this.WorldRoot.Components.Add(this.physics);
-
-            this.WorldRoot.Add(this.player);
-
-            base.Initialize(resolver);
-        }
-    }
-
-    public enum ShoeFoot
-    {
-        Right,
-        Left
-    }
-
     public class PhysicsEngine : Component
     {
         private readonly List<IWall> walls = new List<IWall>();
@@ -101,8 +26,8 @@ namespace ChasingGhosts.Windows
 
         private void Hook(GameObject obj)
         {
-            obj.ChildObjectMoved -= Item_ChildObjectMoved;
-            obj.ChildObjectMoved += Item_ChildObjectMoved;
+            obj.ChildObjectMoved -= this.Item_ChildObjectMoved;
+            obj.ChildObjectMoved += this.Item_ChildObjectMoved;
 
             if (obj is IWall w)
             {
@@ -242,80 +167,5 @@ namespace ChasingGhosts.Windows
 
             return null;
         }
-    }
-
-    public class Wall : WorldObject, IWall
-    {
-
-    }
-
-    public class Player : WorldObject, IMovableCharacter
-    {
-        public override void Initialize(IResolver resolver)
-        {
-            var sprite = Sprite.Load("player");
-            sprite.TransformOrigin = new Vector2(.5f, 2f / 3f);
-            this.Add(new WorldObject
-            {
-                Components =
-                {
-                    sprite
-                }
-            });
-
-            this.Width = 112;
-            this.Height = 128;
-            var visual = new Sprite(Color.Red * .25f, (int)this.Width, (int)this.Height);
-            visual.CenterObject();
-            this.Components.Add(visual);
-            base.Initialize(resolver);
-        }
-
-        private const int Mps = 250;
-
-        public Vector2 Movement { get; private set; }
-
-        public override void Update(GameTime time)
-        {
-            base.Update(time);
-
-            var movement = Vector2.Zero;
-
-            if (InputManager.IsKeyDown(Keys.A))
-            {
-                movement -= new Vector2(1, 0);
-            }
-
-            if (InputManager.IsKeyDown(Keys.W))
-            {
-                movement -= new Vector2(0, 1);
-            }
-
-            if (InputManager.IsKeyDown(Keys.D))
-            {
-                movement += new Vector2(1, 0);
-            }
-
-            if (InputManager.IsKeyDown(Keys.S))
-            {
-                movement += new Vector2(0, 1);
-            }
-
-            this.Movement = movement * Mps;
-        }
-    }
-
-    public interface IMovableCharacter
-    {
-        Vector2 Movement { get; }
-
-        Vector2 LocalPosition { get; set; }
-
-        Rectanglef GlobalRegion { get; }
-    }
-
-    public interface IWall
-    {
-        Rectanglef GlobalRegion { get; }
     }
 }
