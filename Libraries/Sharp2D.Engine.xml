@@ -420,6 +420,11 @@
                 Starts this value animator. From now on, every <see cref="M:Sharp2D.Engine.Common.Components.Animations.ValueAnimator.Update(Microsoft.Xna.Framework.GameTime)" /> call will invoke <see cref="M:Sharp2D.Engine.Common.Components.Animations.ValueAnimator.UpdateValue(System.Single)" />.
             </summary>
         </member>
+        <member name="M:Sharp2D.Engine.Common.Components.Animations.ValueAnimator.Restart">
+            <summary>
+            Restarts this value animator.
+            </summary>
+        </member>
         <member name="M:Sharp2D.Engine.Common.Components.Animations.ValueAnimator.Stop">
             <summary>
                 Stops this value animator and resets all values.

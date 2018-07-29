@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.ViewModels;
@@ -8,10 +10,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 using Sharp2D.Engine.Common;
+using Sharp2D.Engine.Common.Components.Animations;
+using Sharp2D.Engine.Common.Components.Animations.Predefined;
 using Sharp2D.Engine.Common.Components.Sprites;
 using Sharp2D.Engine.Common.ObjectSystem;
 using Sharp2D.Engine.Common.Scene;
 using Sharp2D.Engine.Common.World;
+using Sharp2D.Engine.Drawing;
 using Sharp2D.Engine.Helper;
 using Sharp2D.Engine.Infrastructure;
 using Sharp2D.Engine.Utility;
@@ -22,6 +27,14 @@ namespace ChasingGhosts.Windows.World
     {
         private readonly PlayerViewModel viewModel;
 
+        private FragmentedSpriteSheet sheetIdle;
+        private FragmentedSpriteSheet sheetWalk;
+
+        private EventValueAnimator animIdle;
+        private EventValueAnimator animWalk;
+
+        private Vector2 oldMovement;
+
         public Player(PlayerViewModel viewModel)
         {
             this.viewModel = viewModel;
@@ -29,23 +42,126 @@ namespace ChasingGhosts.Windows.World
 
         public override void Initialize(IResolver resolver)
         {
-            var sprite = Sprite.Load("player");
-            sprite.TransformOrigin = new Vector2(.5f, 2f / 3f);
-            this.Add(new GameObject
-            {
-                Components =
-                {
-                    sprite
-                }
-            });
-
-            this.Width = 112;
-            this.Height = 128;
+            this.Width = 128;
+            this.Height = 144;
             var visual = new Sprite(Color.Red * .25f, (int)this.Width, (int)this.Height);
             visual.CenterObject();
             this.Components.Add(visual);
+
+            this.CreateIdleAnimation();
+            this.CreateWalkAnimation();
+            
             base.Initialize(resolver);
+
+            this.Direction = World.Movement.Down;
         }
+
+        private string GetAnimationKey()
+        {
+            switch (this.Direction)
+            {
+                case World.Movement.Right:
+                    return "right";
+                case World.Movement.DownRight:
+                    return "downright";
+                case World.Movement.Down:
+                    return "down";
+                case World.Movement.DownLeft:
+                    return "downleft";
+                case World.Movement.Left:
+                    return "left";
+                case World.Movement.TopLeft:
+                    return "topleft";
+                case World.Movement.Top:
+                    return "top";
+                case World.Movement.TopRight:
+                    return "topright";
+                default:
+                    return null;
+            }
+        }
+
+        private void CreateIdleAnimation()
+        {
+            this.sheetIdle = new FragmentedSpriteSheet("diablo_idle", new SpriteSheetFragment
+            {
+                Groups = new List<SpriteSheetFragmentGroup>
+                {
+                    CreateFragmentGroup("down", 0, 10),
+                    CreateFragmentGroup("downleft", 1, 10),
+                    CreateFragmentGroup("left", 2, 10),
+                    CreateFragmentGroup("topleft", 3, 10),
+                    CreateFragmentGroup("top", 4, 10),
+                    CreateFragmentGroup("topright", 5, 10),
+                    CreateFragmentGroup("right", 6, 10),
+                    CreateFragmentGroup("downright", 7, 10),
+                }
+            });
+            this.sheetIdle.Scale = new Vector2(2);
+            this.sheetIdle.IsVisible = true;
+            this.Components.Add(this.sheetIdle);
+
+            this.animIdle = new EventValueAnimator(TimeSpan.FromSeconds(.8f), true);
+            this.animIdle.ValueUpdated += (s, val) =>
+            {
+                var keys = this.sheetIdle.Groups[this.GetAnimationKey()];
+                var index = (int)(val * (keys.Count + 1));
+                index = Math.Min(keys.Count - 1, index);
+                var key = keys[index];
+                this.sheetIdle.RegionKey = key;
+            };
+            this.animIdle.Easing = AnimationEase.Linear;
+            this.animIdle.Loop = true;
+            this.animIdle.IsPaused = false;
+            this.Components.Add(this.animIdle);
+        }
+
+        private void CreateWalkAnimation()
+        {
+            this.sheetWalk = new FragmentedSpriteSheet("diablo_walk", new SpriteSheetFragment
+            {
+                Groups = new List<SpriteSheetFragmentGroup>
+                {
+                    CreateFragmentGroup("down", 0, 8),
+                    CreateFragmentGroup("downleft", 1, 8),
+                    CreateFragmentGroup("left", 2, 8),
+                    CreateFragmentGroup("topleft", 3, 8),
+                    CreateFragmentGroup("top", 4, 8),
+                    CreateFragmentGroup("topright", 5, 8),
+                    CreateFragmentGroup("right", 6, 8),
+                    CreateFragmentGroup("downright", 7, 8),
+                }
+            });
+            this.sheetWalk.Scale = new Vector2(2);
+            this.sheetWalk.IsVisible = false;
+            this.Components.Add(this.sheetWalk);
+
+            this.animWalk = new EventValueAnimator(TimeSpan.FromSeconds(.8f), true);
+            this.animWalk.ValueUpdated += (s, val) =>
+            {
+                var keys = this.sheetWalk.Groups[this.GetAnimationKey()];
+                var index = (int)(val * keys.Count);
+                index = Math.Min(keys.Count - 1, index);
+                this.sheetWalk.RegionKey = keys[index];
+            };
+            this.animWalk.Easing = AnimationEase.Linear;
+            this.animWalk.Loop = true;
+            this.animWalk.IsPaused = true;
+            this.Components.Add(this.animWalk);
+        }
+
+        private static SpriteSheetFragmentGroup CreateFragmentGroup(string groupName, int yStart, int frameCount)
+        {
+            const int Size = 96;
+            return new SpriteSheetFragmentGroup
+            {
+                TransformOrigin = new Vector2(.5f, .5f),
+                GroupName = groupName,
+                Frames = Enumerable.Range(0, frameCount).Select(i => new Rectangle(i * Size, yStart * Size, Size, Size)).ToList()
+            };
+        }
+
+        public Movement Direction { get; private set; }
 
         public float MaxMovement => 250;
 
@@ -65,7 +181,7 @@ namespace ChasingGhosts.Windows.World
             HandleKeyboard(ref movement);
             HandleGamepad(ref movement);
             this.HandleCursor(ref movement);
-            Debug.WriteLine(MovementHelper.GetMovement(movement));
+            this.oldMovement = this.Movement;
             this.Movement = movement;
         }
 
@@ -129,6 +245,46 @@ namespace ChasingGhosts.Windows.World
 
             m.Normalize();
             movement = m;
+        }
+
+        public override void Draw(SharpDrawBatch batch, GameTime time)
+        {
+            this.UpdateDirection();
+
+            this.UpdateSpritesheets();
+
+            base.Draw(batch, time);
+        }
+
+        private void UpdateSpritesheets()
+        {
+            if (this.Movement == Vector2.Zero && this.oldMovement != Vector2.Zero)
+            {
+                this.sheetWalk.IsVisible = false;
+                this.animWalk.Stop();
+                this.animWalk.IsPaused = true;
+
+                this.sheetIdle.IsVisible = true;
+                this.animIdle.Restart();
+            }
+            else if (this.Movement != Vector2.Zero && this.oldMovement == Vector2.Zero)
+            {
+                this.sheetIdle.IsVisible = false;
+                this.animIdle.Stop();
+                this.animIdle.IsPaused = true;
+
+                this.sheetWalk.IsVisible = true;
+                this.animWalk.Restart();
+            }
+        }
+
+        private void UpdateDirection()
+        {
+            var direction = MovementHelper.GetMovement(this.Movement);
+            if (direction != World.Movement.None)
+            {
+                this.Direction = direction;
+            }
         }
     }
 
