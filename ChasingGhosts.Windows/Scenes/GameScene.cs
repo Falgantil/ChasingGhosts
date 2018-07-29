@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using ChasingGhosts.Windows.UI;
 using ChasingGhosts.Windows.ViewModels;
@@ -46,12 +47,19 @@ namespace ChasingGhosts.Windows.Scenes
             var bar = new HealthBar(this.playerVm);
             this.UiRoot.Add(bar);
 
-            var timer = new GameTimer(TimeSpan.FromSeconds(1))
-            {
-                Looped = true
-            };
-            timer.Expired += (s, e) => this.playerVm.Health = this.playerVm.Health - 15f;
-            this.UiRoot.Components.Add(timer);
+            //var timer = new GameTimer(TimeSpan.FromSeconds(1))
+            //{
+            //    Looped = true
+            //};
+            //timer.Expired += (s, e) => this.playerVm.DamagePlayer(15);
+            //this.UiRoot.Components.Add(timer);
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            this.WorldRoot.IsPaused = !this.playerVm.IsAlive;
+
+            base.Update(gameTime);
         }
 
         private void InitWorld()
@@ -65,12 +73,12 @@ namespace ChasingGhosts.Windows.Scenes
             };
             this.WorldRoot.Add(camera);
 
+            this.WorldRoot.Add(this.player);
+
             this.ShitsAndGiggles();
 
             this.physics = new PhysicsEngine();
             this.WorldRoot.Components.Add(this.physics);
-
-            this.WorldRoot.Add(this.player);
         }
 
         private void ShitsAndGiggles()
@@ -81,6 +89,11 @@ namespace ChasingGhosts.Windows.Scenes
             var generatedPath = new GeneratedPath();
             this.WorldRoot.Add(generatedPath);
             generatedPath.CreatePath(this.player.GlobalPosition);
+
+            this.WorldRoot.Add(new Npc(this.player, this.playerVm)
+            {
+                LocalPosition = new Vector2(-100, -500)
+            });
         }
     }
 }

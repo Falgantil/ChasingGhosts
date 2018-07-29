@@ -8,24 +8,20 @@ namespace ChasingGhosts.Windows.ViewModels
 {
     public class PlayerViewModel
     {
-        private float health = 20f;
-
-        public float Health
-        {
-            get => this.health;
-            set
-            {
-                var above0 = this.health > 0;
-                this.health = value;
-                if (this.health <= 0 && above0)
-                {
-                    this.Dies?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
+        public float Health { get; private set; } = 100f;
 
         public event EventHandler Dies;
 
         public bool IsAlive => this.Health > 0f;
+
+        public void DamagePlayer(float damage)
+        {
+            var oldHealth = this.Health;
+            this.Health -= damage;
+            if (this.Health <= 0 && oldHealth > 0)
+            {
+                this.Dies?.Invoke(this, EventArgs.Empty);
+            }
+        }
     }
 }

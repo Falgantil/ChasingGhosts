@@ -1,15 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 
-using Sharp2D.Engine.Common.ObjectSystem;
-
 namespace ChasingGhosts.Windows.Interfaces
 {
-    public interface IMovableCharacter
+    public interface IMovableCharacter : IPhysicsEntity
     {
+        float MaxMovement { get; }
+
         Vector2 Movement { get; }
-
-        Vector2 LocalPosition { get; set; }
-
-        Rectanglef GlobalRegion { get; }
     }
 }

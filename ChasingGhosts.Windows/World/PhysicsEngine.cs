@@ -100,7 +100,7 @@ namespace ChasingGhosts.Windows.World
             var elapsedSeconds = (float)time.ElapsedGameTime.TotalSeconds;
             foreach (var character in this.characters)
             {
-                var movement = character.Movement * elapsedSeconds;
+                var movement = (character.Movement * character.MaxMovement) * elapsedSeconds;
                 if (movement == Vector2.Zero)
                 {
                     continue;
@@ -108,23 +108,29 @@ namespace ChasingGhosts.Windows.World
 
                 var startRegion = character.GlobalRegion;
 
-                foreach (var wall in this.walls)
-                {
-                    var endRegion = new Rectanglef(startRegion.X + movement.X, startRegion.Y + movement.Y, startRegion.Width, startRegion.Height);
-
-                    var wallReg = wall.GlobalRegion;
-                    if (!wallReg.Intersects(endRegion))
-                    {
-                        continue;
-                    }
-
-                    movement = new Vector2(CheckRight(startRegion, endRegion, wallReg) ?? movement.X, movement.Y);
-                    movement = new Vector2(CheckLeft(startRegion, endRegion, wallReg) ?? movement.X, movement.Y);
-                    movement = new Vector2(movement.X, CheckBottom(startRegion, endRegion, wallReg) ?? movement.Y);
-                    movement = new Vector2(movement.X, CheckTop(startRegion, endRegion, wallReg) ?? movement.Y);
-                }
+                CheckMovement(this.walls, startRegion, ref movement);
+                CheckMovement(this.characters.Where(c => c != character), startRegion, ref movement);
 
                 character.LocalPosition += movement;
+            }
+        }
+
+        private static void CheckMovement(IEnumerable<IPhysicsEntity> list, Rectanglef startRegion, ref Vector2 movement)
+        {
+            foreach (var wall in list)
+            {
+                var endRegion = new Rectanglef(startRegion.X + movement.X, startRegion.Y + movement.Y, startRegion.Width, startRegion.Height);
+
+                var wallReg = wall.GlobalRegion;
+                if (!wallReg.Intersects(endRegion))
+                {
+                    continue;
+                }
+
+                movement = new Vector2(CheckRight(startRegion, endRegion, wallReg) ?? movement.X, movement.Y);
+                movement = new Vector2(CheckLeft(startRegion, endRegion, wallReg) ?? movement.X, movement.Y);
+                movement = new Vector2(movement.X, CheckBottom(startRegion, endRegion, wallReg) ?? movement.Y);
+                movement = new Vector2(movement.X, CheckTop(startRegion, endRegion, wallReg) ?? movement.Y);
             }
         }
 

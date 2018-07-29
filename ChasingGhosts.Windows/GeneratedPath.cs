@@ -19,7 +19,7 @@ using Sharp2D.Engine.Infrastructure;
 
 namespace ChasingGhosts.Windows
 {
-    public class GeneratedPath : WorldObject
+    public class GeneratedPath : GameObject
     {
         private const int Distance = 250;
 
@@ -64,7 +64,7 @@ namespace ChasingGhosts.Windows
         }
     }
 
-    public class GamePath : WorldObject
+    public class GamePath : GameObject
     {
         private readonly Vector2[] dots;
 
@@ -102,7 +102,7 @@ namespace ChasingGhosts.Windows
         }
     }
 
-    public class ShoePrint : WorldObject, IShoePrint
+    public class ShoePrint : GameObject, IShoePrint
     {
         private Sprite shoeSprite;
 
@@ -116,7 +116,7 @@ namespace ChasingGhosts.Windows
             this.shoeSprite.CenterObject();
             this.shoeSprite.SpriteEffect = foot == ShoeFoot.Right ? SpriteEffects.None : SpriteEffects.FlipVertically;
             this.Add(
-                new WorldObject
+                new GameObject
                 {
                     LocalPosition = new Vector2(0, foot == ShoeFoot.Right ? Offset : -Offset),
                     Components =
@@ -132,7 +132,7 @@ namespace ChasingGhosts.Windows
         {
             this.IsActive = false;
             var animation = ValueAnimator.PlayAnimation(this, val => this.shoeSprite.Tint = Color.White * val, TimeSpan.FromSeconds(1));
-            animation.Easing = AnimationEase.CubicEaseInOut;
+            animation.Easing = AnimationEase.CubicEaseOut;
             animation.Loop = false;
             animation.Inverse = true;
         }

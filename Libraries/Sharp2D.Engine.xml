@@ -5299,39 +5299,6 @@
                 The time.
             </param>
         </member>
-        <member name="T:Sharp2D.Engine.Common.World.WorldObject">
-            <summary>
-                The world object.
-            </summary>
-        </member>
-        <member name="M:Sharp2D.Engine.Common.World.WorldObject.#ctor(Microsoft.Xna.Framework.Vector2,Sharp2D.Engine.Common.Components.Sprites.Sprite,Sharp2D.Engine.Common.ObjectSystem.GameObject[])">
-            <summary>
-            Initializes a new instance of the <see cref="T:Sharp2D.Engine.Common.World.WorldObject" /> class.
-            </summary>
-            <param name="localPosition">The local position.</param>
-            <param name="sprite">The Sprite.</param>
-            <param name="children">The children.</param>
-        </member>
-        <member name="M:Sharp2D.Engine.Common.World.WorldObject.#ctor(Sharp2D.Engine.Common.ObjectSystem.GameObject[])">
-            <summary>
-            Initializes a new instance of the <see cref="T:Sharp2D.Engine.Common.World.WorldObject" /> class.
-            </summary>
-            <param name="children">The children.</param>
-        </member>
-        <member name="M:Sharp2D.Engine.Common.World.WorldObject.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:Sharp2D.Engine.Common.World.WorldObject" /> class.
-            </summary>
-        </member>
-        <member name="M:Sharp2D.Engine.Common.World.WorldObject.IsChildValid(Sharp2D.Engine.Common.ObjectSystem.GameObject)">
-            <summary>
-            Determines whether the specified child is a valid child for this game object.
-            </summary>
-            <param name="child">The child.</param>
-            <returns>
-            The <see cref="T:System.Boolean" />.
-            </returns>
-        </member>
         <member name="T:Sharp2D.Engine.Infrastructure.Input.CursorDevice">
             <summary>
                 The Mouse cursor implementation used for Computer environments.
@@ -8387,7 +8354,7 @@
                 The rnd.
             </summary>
         </member>
-        <member name="M:Sharp2D.Engine.Particles.ParticleEmitter.#ctor(Sharp2D.Engine.Common.World.WorldObject,System.Collections.Generic.List{System.String})">
+        <member name="M:Sharp2D.Engine.Particles.ParticleEmitter.#ctor(Sharp2D.Engine.Common.ObjectSystem.GameObject,System.Collections.Generic.List{System.String})">
             <summary>
             Initializes a new instance of the <see cref="T:Sharp2D.Engine.Particles.ParticleEmitter"/> class.
             </summary>
@@ -8457,7 +8424,7 @@
                 Gets the emitters.
             </summary>
         </member>
-        <member name="M:Sharp2D.Engine.Particles.ParticleEngine.CreateEmitter(Sharp2D.Engine.Common.World.WorldObject)">
+        <member name="M:Sharp2D.Engine.Particles.ParticleEngine.CreateEmitter(Sharp2D.Engine.Common.ObjectSystem.GameObject)">
             <summary>
             The create emitter.
             </summary>

@@ -1,4 +1,7 @@
-﻿using ChasingGhosts.Windows.Interfaces;
+﻿using System;
+using System.Diagnostics;
+
+using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.ViewModels;
 
 using Microsoft.Xna.Framework;
@@ -6,14 +9,16 @@ using Microsoft.Xna.Framework.Input;
 
 using Sharp2D.Engine.Common;
 using Sharp2D.Engine.Common.Components.Sprites;
+using Sharp2D.Engine.Common.ObjectSystem;
 using Sharp2D.Engine.Common.Scene;
 using Sharp2D.Engine.Common.World;
+using Sharp2D.Engine.Helper;
 using Sharp2D.Engine.Infrastructure;
 using Sharp2D.Engine.Utility;
 
 namespace ChasingGhosts.Windows.World
 {
-    public class Player : WorldObject, IMovableCharacter
+    public class Player : GameObject, IMovableCharacter
     {
         private readonly PlayerViewModel viewModel;
 
@@ -26,7 +31,7 @@ namespace ChasingGhosts.Windows.World
         {
             var sprite = Sprite.Load("player");
             sprite.TransformOrigin = new Vector2(.5f, 2f / 3f);
-            this.Add(new WorldObject
+            this.Add(new GameObject
             {
                 Components =
                 {
@@ -42,7 +47,7 @@ namespace ChasingGhosts.Windows.World
             base.Initialize(resolver);
         }
 
-        private const int Mps = 250;
+        public float MaxMovement => 250;
 
         public Vector2 Movement { get; private set; }
 
@@ -50,10 +55,7 @@ namespace ChasingGhosts.Windows.World
         {
             base.Update(time);
 
-            if (this.viewModel.IsAlive)
-            {
-                this.HandleMovement();
-            }
+            this.HandleMovement();
         }
 
         private void HandleMovement()
@@ -63,8 +65,8 @@ namespace ChasingGhosts.Windows.World
             HandleKeyboard(ref movement);
             HandleGamepad(ref movement);
             this.HandleCursor(ref movement);
-
-            this.Movement = movement * Mps;
+            Debug.WriteLine(MovementHelper.GetMovement(movement));
+            this.Movement = movement;
         }
 
         private void HandleCursor(ref Vector2 movement)
@@ -128,5 +130,92 @@ namespace ChasingGhosts.Windows.World
             m.Normalize();
             movement = m;
         }
+    }
+
+    public static class MovementHelper
+    {
+        public static Movement GetMovement(Vector2 direction)
+        {
+            if (direction == Vector2.Zero)
+            {
+                return Movement.None;
+            }
+            var degrees = MathHelper.ToDegrees((float)Math.Atan2(direction.Y, direction.X));
+            return GetMovement(degrees);
+        }
+
+        public static Movement GetMovement(float rotation)
+        {
+            rotation = SharpMathHelper.Loop(0, 360, rotation);
+
+            const float HalfCoverage = 22.5f;
+
+            if (TestDirection(rotation, -HalfCoverage, HalfCoverage)) // Right
+            {
+                return Movement.Right;
+            }
+            if (TestDirection(rotation, HalfCoverage, HalfCoverage * 3f)) // Right
+            {
+                return Movement.DownRight;
+            }
+            if (TestDirection(rotation, HalfCoverage * 3f, HalfCoverage * 5f)) // Right
+            {
+                return Movement.Down;
+            }
+            if (TestDirection(rotation, HalfCoverage * 5f, HalfCoverage * 7f)) // Right
+            {
+                return Movement.DownLeft;
+            }
+            if (TestDirection(rotation, HalfCoverage * 7f, HalfCoverage * 9f)) // Right
+            {
+                return Movement.Left;
+            }
+            if (TestDirection(rotation, HalfCoverage * 9f, HalfCoverage * 11f)) // Right
+            {
+                return Movement.TopLeft;
+            }
+            if (TestDirection(rotation, HalfCoverage * 11f, HalfCoverage * 13f)) // Right
+            {
+                return Movement.Top;
+            }
+            if (TestDirection(rotation, HalfCoverage * 13f, HalfCoverage * 15f)) // Right
+            {
+                return Movement.TopRight;
+            }
+
+            return Movement.None;
+        }
+
+        private static bool TestDirection(float rotation, float start, float end)
+        {
+            bool TestDirection() => start < rotation && rotation <= end;
+            if (TestDirection())
+            {
+                return true;
+            }
+            if (start < 0)
+            {
+                start = SharpMathHelper.Loop(0, 360, start);
+            }
+            if (end < 0)
+            {
+                end = SharpMathHelper.Loop(0, 360, start);
+            }
+
+            return TestDirection();
+        }
+    }
+
+    public enum Movement
+    {
+        None,
+        Right,
+        DownRight,
+        Down,
+        DownLeft,
+        Left,
+        TopLeft,
+        Top,
+        TopRight
     }
 }

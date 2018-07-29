@@ -2,8 +2,7 @@
 
 namespace ChasingGhosts.Windows.Interfaces
 {
-    public interface IWall
+    public interface IWall : IPhysicsEntity
     {
-        Rectanglef GlobalRegion { get; }
     }
 }
