@@ -29,11 +29,15 @@ namespace ChasingGhosts.Windows.World
 
         private GameTimer attackTimer;
 
+        private MovementSprite spriteWalk;
+
         public Npc(Player player, PlayerViewModel viewModel)
         {
             this.player = player;
             this.viewModel = viewModel;
         }
+
+        public Movement Direction { get; private set; }
 
         public float MaxMovement { get; private set; } = 200;
 
@@ -41,18 +45,12 @@ namespace ChasingGhosts.Windows.World
 
         public override void Initialize(IResolver resolver)
         {
-            var sprite = Sprite.Load("player");
-            sprite.TransformOrigin = new Vector2(.5f, 2f / 3f);
-            this.Add(new GameObject
-            {
-                Components =
-                {
-                    sprite
-                }
-            });
+            this.spriteWalk = new MovementSprite("npc_walk", TimeSpan.FromSeconds(.5f));
+            this.spriteWalk.Start();
+            this.Components.Add(this.spriteWalk);
 
-            this.Width = 112;
-            this.Height = 128;
+            this.Width = 72;
+            this.Height = 72;
             var visual = new Sprite(Color.GreenYellow * .25f, (int)this.Width, (int)this.Height);
             visual.CenterObject();
             this.Components.Add(visual);
@@ -81,6 +79,17 @@ namespace ChasingGhosts.Windows.World
             this.HandlePlayerRange();
 
             this.HandleMovement();
+
+            this.UpdateDirection();
+        }
+
+        private void UpdateDirection()
+        {
+            var direction = MovementHelper.GetMovement(this.Movement);
+            if (direction != World.Movement.None)
+            {
+                this.spriteWalk.Direction = direction;
+            }
         }
 
         private void HandlePlayerRange()
@@ -127,7 +136,7 @@ namespace ChasingGhosts.Windows.World
             this.viewModel.DamagePlayer(15f);
         }
 
-        private bool IsCloseEnoughToHit() => Vector2.Distance(this.GlobalPosition, this.player.GlobalPosition) <= 200;
+        private bool IsCloseEnoughToHit() => Vector2.Distance(this.GlobalPosition, this.player.GlobalPosition) <= 100;
 
         private void HandleMovement()
         {

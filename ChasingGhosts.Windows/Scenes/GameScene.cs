@@ -6,12 +6,14 @@ using ChasingGhosts.Windows.ViewModels;
 using ChasingGhosts.Windows.World;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 using Sharp2D.Engine.Common;
 using Sharp2D.Engine.Common.Components.Sprites;
 using Sharp2D.Engine.Common.Scene;
 using Sharp2D.Engine.Common.World.Camera;
 using Sharp2D.Engine.Infrastructure;
+using Sharp2D.Engine.Utility;
 
 namespace ChasingGhosts.Windows.Scenes
 {
