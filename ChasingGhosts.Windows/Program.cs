@@ -37,9 +37,8 @@ namespace ChasingGhosts.Windows
 
         public override IGameHost CreateGame(SharpGameManager gameManager)
         {
-            gameManager.BackgroundColor = Color.Gray;
             var game = base.CreateGame(gameManager);
-            SharpGameManager.ContentLoaded += (sender, args) => gameManager.StartScene = new GameScene(this.Resolver);
+            SharpGameManager.ContentLoaded += (sender, args) => gameManager.StartScene = new PrologueScene(this.Resolver);
             return game;
         }
 

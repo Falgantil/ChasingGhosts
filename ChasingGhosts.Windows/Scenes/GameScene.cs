@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ChasingGhosts.Windows.UI;
 using ChasingGhosts.Windows.ViewModels;
@@ -28,9 +29,10 @@ namespace ChasingGhosts.Windows.Scenes
         public GameScene(IResolver resolver)
             : base(resolver)
         {
+            Sharp2DApplication.GameManager.BackgroundColor = Color.Gray;
         }
 
-        public override void Initialize(IResolver resolver)
+        public override async void Initialize(IResolver resolver)
         {
             this.playerVm = new PlayerViewModel();
             this.playerVm.Dies += async (s, e) =>
@@ -42,6 +44,13 @@ namespace ChasingGhosts.Windows.Scenes
             this.InitUi();
 
             base.Initialize(resolver);
+
+            this.IsPaused = true;
+
+            await Task.Delay(1500);
+            await this.WaitForUpdate();
+
+            this.IsPaused = false;
         }
 
         private void InitUi()

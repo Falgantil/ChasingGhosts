@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Interfaces\IPhysicsEntity.cs" />
+    <Compile Include="Scenes\PrologueScene.cs" />
     <Compile Include="UI\AnimatingBackground.cs" />
     <Compile Include="UI\DeathScreen.cs" />
     <Compile Include="Scenes\GameScene.cs" />
