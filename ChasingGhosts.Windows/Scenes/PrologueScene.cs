@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Media;
 
 using Sharp2D.Engine.Common;
 using Sharp2D.Engine.Common.Components.Animations;
@@ -60,6 +62,8 @@ namespace ChasingGhosts.Windows.Scenes
         {
             const int SameLineMargin = 10;
 
+            MediaPlayer.Volume = .8f;
+
             await this.Delay(1000, token);
             var lbl = this.CreateLabel("POST", Color.Gray);
             this.InsertLabelLine(lbl);
@@ -81,10 +85,14 @@ namespace ChasingGhosts.Windows.Scenes
             lbl.LocalPosition = new Vector2(lastLbl.LocalPosition.X + lastLblLength + SameLineMargin, lastLbl.LocalPosition.Y);
             await this.Delay(500, token);
 
+            var song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_launch");
+            MediaPlayer.Play(song);
+
             lbl = this.CreateLabel("Loading operation instructions", Color.Gray);
             this.InsertLabelLine(lbl);
             await this.DelayDots(lbl, token);
 
+            song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_error");
             lastLbl = lbl;
             lastLblLength = GetLabelLength(lastLbl);
             lbl = this.CreateLabel("SUCC", Color.Green);
@@ -92,6 +100,8 @@ namespace ChasingGhosts.Windows.Scenes
             await this.Delay(250, token);
             lbl.Text += ".-48tTQ#\"%rqawj912gGaf129'\"/";
             lbl.Tint = Color.IndianRed;
+            MediaPlayer.Stop();
+            MediaPlayer.Play(song);
 
             await this.Delay(1500, token);
 
@@ -106,10 +116,15 @@ namespace ChasingGhosts.Windows.Scenes
             await this.Delay(1500, token);
             lbl = this.CreateLabel("...", Color.Gray);
             this.InsertLabelLine(lbl);
+            song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_bsod");
             await this.Delay(500, token);
 
             lbl = this.CreateLabel("System restored!", Color.Green);
             this.InsertLabelLine(lbl);
+
+            MediaPlayer.Stop();
+            MediaPlayer.Play(song);
+            MediaPlayer.Volume = .25f;
 
             await this.Delay(3000, token);
 

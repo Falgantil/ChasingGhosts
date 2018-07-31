@@ -45,19 +45,20 @@ namespace ChasingGhosts.Windows.World
 
         public override void Initialize(IResolver resolver)
         {
-            this.spriteWalk = new MovementSprite("npc_walk", TimeSpan.FromSeconds(.5f));
-            this.spriteWalk.Start();
-            this.Components.Add(this.spriteWalk);
-
             this.Width = 72;
             this.Height = 72;
             var visual = new Sprite(Color.GreenYellow * .25f, (int)this.Width, (int)this.Height);
             visual.CenterObject();
             this.Components.Add(visual);
+            visual.IsVisible = false;
+
+            this.spriteWalk = new MovementSprite("npc_walk", TimeSpan.FromSeconds(.5f));
+            this.spriteWalk.Start();
+            this.Components.Add(this.spriteWalk);
 
             var speech = new SpeechBubble
             {
-                LocalPosition = new Vector2(80, -130),
+                LocalPosition = new Vector2(30, -50),
                 Text = "Traitor!"
             };
             this.Add(speech);

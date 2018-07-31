@@ -70,6 +70,12 @@ namespace ChasingGhosts.Windows
 
         public GamePath(Vector2[] dots)
         {
+            var root = dots.First();
+            if (root != Vector2.Zero)
+            {
+                dots = dots.Select(v => v - root).ToArray();
+            }
+
             this.dots = dots;
         }
 
@@ -113,6 +119,7 @@ namespace ChasingGhosts.Windows
 
             const float Offset = 10;
             this.shoeSprite = Sprite.Load("shoe");
+            this.shoeSprite.Scale = new Vector2(.8f);
             this.shoeSprite.CenterObject();
             this.shoeSprite.SpriteEffect = foot == ShoeFoot.Right ? SpriteEffects.None : SpriteEffects.FlipVertically;
             this.Add(
@@ -128,10 +135,16 @@ namespace ChasingGhosts.Windows
 
         public bool IsActive { get; private set; } = true;
 
+        public Color Tint
+        {
+            get => this.shoeSprite.Tint;
+            set => this.shoeSprite.Tint = value;
+        }
+
         public void Dismiss()
         {
             this.IsActive = false;
-            var animation = ValueAnimator.PlayAnimation(this, val => this.shoeSprite.Tint = Color.White * val, TimeSpan.FromSeconds(1));
+            var animation = ValueAnimator.PlayAnimation(this, val => this.shoeSprite.Tint = Color.White * val, TimeSpan.FromSeconds(.5f));
             animation.Easing = AnimationEase.CubicEaseOut;
             animation.Loop = false;
             animation.Inverse = true;

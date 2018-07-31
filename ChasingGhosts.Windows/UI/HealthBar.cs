@@ -45,20 +45,26 @@ namespace ChasingGhosts.Windows.UI
 
         public float Health => this.viewModel.Health;
 
-        public bool IsDoneAnimating => Math.Abs(this.viewModel.Health - this.animHealth) < .1f;
-
         public override void Update(GameTime time)
         {
             base.Update(time);
 
             const int TriggersPerSecond = 20;
 
-            if (this.animHealth > this.viewModel.Health)
+            if (this.animHealth != this.Health)
             {
-                this.animHealth -= TriggersPerSecond * (float)time.ElapsedGameTime.TotalSeconds;
-                if (this.animHealth <= this.viewModel.Health)
+                var diff = TriggersPerSecond * (float)time.ElapsedGameTime.TotalSeconds;
+                if (this.animHealth > this.Health && this.animHealth - diff <= this.Health)
                 {
                     this.animHealth = this.Health;
+                }
+                else if (this.animHealth < this.Health && this.animHealth - diff >= this.Health)
+                {
+                    this.animHealth = this.Health;
+                }
+                else
+                {
+                    this.animHealth += this.animHealth > this.Health ? -diff : diff;
                 }
             }
         }
@@ -71,8 +77,9 @@ namespace ChasingGhosts.Windows.UI
             {
                 return;
             }
-            var screenX = Resolution.VirtualScreen.X;
-            batch.Draw(this.text, new Rectangle(0, 0, (int)(screenX * (this.animHealth / 100f)), 25), Color.Red);
+            var screen = Resolution.VirtualScreen;
+            var perc = this.animHealth / 100f;
+            batch.Draw(this.text, new Rectangle(0, 0, (int)screen.X, (int)screen.Y), Color.DarkRed * (1f - perc) * .7f);
         }
     }
 }

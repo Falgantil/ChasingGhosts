@@ -68,3 +68,21 @@
 /processorParam:TextureFormat=Color
 /build:player_walk.png
 
+#begin windows_error.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:windows_error.mp3
+
+#begin windows_launch.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:windows_launch.mp3
+
+#begin windows_bsod.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:windows_bsod.mp3
+

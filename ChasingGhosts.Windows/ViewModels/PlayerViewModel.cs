@@ -23,5 +23,14 @@ namespace ChasingGhosts.Windows.ViewModels
                 this.Dies?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        public void HealPlayer(float healing)
+        {
+            this.Health += healing;
+            if (this.Health >= 100)
+            {
+                this.Health = 100;
+            }
+        }
     }
 }

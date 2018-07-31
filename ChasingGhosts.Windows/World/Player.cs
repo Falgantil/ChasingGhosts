@@ -32,33 +32,56 @@ namespace ChasingGhosts.Windows.World
 
         private MovementSprite spriteIdle;
 
+        private EventValueAnimator speedReducer;
+
+        private float topSpeed = 250;
+
         public Player(PlayerViewModel viewModel)
         {
             this.viewModel = viewModel;
+            this.MaxMovement = this.topSpeed;
         }
 
         public override void Initialize(IResolver resolver)
         {
-            this.Width = 72;
-            this.Height = 72;
+            this.Width = 56;
+            this.Height = 56;
             var visual = new Sprite(Color.Red * .25f, (int)this.Width, (int)this.Height);
             visual.CenterObject();
+            visual.IsVisible = false;
             this.Components.Add(visual);
 
-            this.spriteIdle = new MovementSprite("player_walk", TimeSpan.FromSeconds(1.5f));
-            this.spriteWalk = new MovementSprite("player_walk", TimeSpan.FromSeconds(.5f));
+            this.spriteIdle = new MovementSprite("player_walk", TimeSpan.FromSeconds(1.5f))
+            {
+                Scale = 3f
+            };
+            this.spriteWalk = new MovementSprite("player_walk", TimeSpan.FromSeconds(.5f))
+            {
+                Scale = 3f
+            };
             this.Components.Add(this.spriteIdle);
             this.Components.Add(this.spriteWalk);
             this.spriteIdle.Start();
 
+            this.speedReducer = new EventValueAnimator(TimeSpan.FromSeconds(5));
+            this.speedReducer.ValueUpdated += (s, perc) =>
+            {
+                var halfSpeed = this.topSpeed / 2f;
+                this.MaxMovement = halfSpeed + halfSpeed * (1 - perc);
+            };
+            this.Components.Add(this.speedReducer);
+
+            this.speedReducer.Start();
+
             base.Initialize(resolver);
 
             this.Direction = World.Movement.Down;
+            this.EquipShoe(ShoeType.FlipFlops);
         }
 
         public Movement Direction { get; private set; }
 
-        public float MaxMovement => 250;
+        public float MaxMovement { get; private set; }
 
         public Vector2 Movement { get; private set; }
 
@@ -66,21 +89,46 @@ namespace ChasingGhosts.Windows.World
         {
             base.Update(time);
 
-            this.HandleMovement();
+            this.HandleMovement(time);
+
+            this.HandleHealth(time);
         }
 
-        private void HandleMovement()
+        private void HandleHealth(GameTime time)
         {
-            var movement = Vector2.Zero;
+            if (this.ShoeType != ShoeType.FlipFlops)
+            {
+                return;
+            }
 
-            HandleKeyboard(ref movement);
-            HandleGamepad(ref movement);
-            this.HandleCursor(ref movement);
+            if (this.viewModel.Health >= 100)
+            {
+                return;
+            }
+
+            this.viewModel.HealPlayer((float)time.ElapsedGameTime.TotalSeconds * 3);
+        }
+
+        private void HandleMovement(GameTime time)
+        {
+            var movement = this.ShoeType == ShoeType.Rollerblades ? this.Movement : Vector2.Zero;
+
+            this.HandleKeyboard(ref movement, time);
+            this.HandleGamepad(ref movement, time);
+            this.HandleCursor(ref movement, time);
             this.oldMovement = this.Movement;
             this.Movement = movement;
+            if (this.ShoeType == ShoeType.Rollerblades && movement != Vector2.Zero && Vector2.Distance(movement, Vector2.Zero) > 2)
+            {
+                movement.Normalize();
+                movement *= 2;
+                this.Movement = movement;
+            }
         }
 
-        private void HandleCursor(ref Vector2 movement)
+        private const float RollerbladeDelay = 2;
+
+        private void HandleCursor(ref Vector2 movement, GameTime time)
         {
             if (!InputManager.IsLeftButtonDown)
             {
@@ -97,10 +145,13 @@ namespace ChasingGhosts.Windows.World
                 return;
             }
 
-            movement = m;
+            if (this.ShoeType == ShoeType.Rollerblades)
+                m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
+
+            movement += m;
         }
 
-        private static void HandleGamepad(ref Vector2 movement)
+        private void HandleGamepad(ref Vector2 movement, GameTime time)
         {
             var m = GamePadManager.LeftThumbstickMovement();
             m = new Vector2(m.X, -m.Y);
@@ -109,10 +160,13 @@ namespace ChasingGhosts.Windows.World
                 return;
             }
 
-            movement = m;
+            if (this.ShoeType == ShoeType.Rollerblades)
+                m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
+
+            movement += m;
         }
 
-        private static void HandleKeyboard(ref Vector2 movement)
+        private void HandleKeyboard(ref Vector2 movement, GameTime time)
         {
             var m = Vector2.Zero;
             if (InputManager.IsKeyDown(Keys.A))
@@ -141,7 +195,11 @@ namespace ChasingGhosts.Windows.World
             }
 
             m.Normalize();
-            movement = m;
+
+            if (this.ShoeType == ShoeType.Rollerblades)
+                m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
+
+            movement += m;
         }
 
         public override void Draw(SharpDrawBatch batch, GameTime time)
@@ -176,6 +234,43 @@ namespace ChasingGhosts.Windows.World
                 this.spriteWalk.Direction = direction;
             }
         }
+
+        public void RefreshMovement()
+        {
+            this.MaxMovement = this.topSpeed;
+            this.speedReducer.Restart();
+        }
+
+        public void EquipShoe(ShoeType type)
+        {
+            this.ShoeType = type;
+            switch (type)
+            {
+                case ShoeType.None:
+                    this.topSpeed = 225;
+                    break;
+                case ShoeType.Sneakers:
+                    this.topSpeed = 250;
+                    break;
+                case ShoeType.Rollerblades:
+                    this.topSpeed = 350;
+                    break;
+                case ShoeType.FlipFlops:
+                    this.topSpeed = 200;
+                    break;
+            }
+            this.RefreshMovement();
+        }
+
+        public ShoeType ShoeType { get; private set; }
+    }
+
+    public enum ShoeType
+    {
+        None,
+        Sneakers,
+        Rollerblades,
+        FlipFlops
     }
 
     public static class MovementHelper
@@ -197,7 +292,7 @@ namespace ChasingGhosts.Windows.World
 
             const float HalfCoverage = 45;
 
-            if (TestDirection(rotation, -HalfCoverage, HalfCoverage))
+            if (TestDirection(rotation, -HalfCoverage, HalfCoverage) || rotation > 360 - HalfCoverage)
             {
                 // Right
                 return Movement.Right;
@@ -267,10 +362,25 @@ namespace ChasingGhosts.Windows.World
 
         private bool started;
 
+        private float scale = 2;
+
         public MovementSprite(string assetName, TimeSpan duration)
         {
             this.assetName = assetName;
             this.duration = duration;
+        }
+
+        public float Scale
+        {
+            get => this.scale;
+            set
+            {
+                this.scale = value;
+                if (this.sheet != null)
+                {
+                    this.sheet.Scale = new Vector2(value);
+                }
+            }
         }
 
         public override void Initialize(IResolver resolver)
@@ -285,7 +395,7 @@ namespace ChasingGhosts.Windows.World
                     CreateFragmentGroup("top", 3, 4)
                 }
             });
-            this.sheet.Scale = new Vector2(2);
+            this.sheet.Scale = new Vector2(this.Scale);
             this.sheet.IsVisible = true;
             this.Children.Add(this.sheet);
 

@@ -90,6 +90,7 @@ namespace ChasingGhosts.Windows.World
                 var center = print.GlobalRegion.Center;
                 if (plrReg.Contains((int)center.X, (int)center.Y))
                 {
+                    player.RefreshMovement();
                     print.Dismiss();
                 }
             }
@@ -100,7 +101,13 @@ namespace ChasingGhosts.Windows.World
             var elapsedSeconds = (float)time.ElapsedGameTime.TotalSeconds;
             foreach (var character in this.characters)
             {
-                var movement = (character.Movement * character.MaxMovement) * elapsedSeconds;
+                var rawMov = character.Movement;
+                if (rawMov == Vector2.Zero)
+                {
+                    continue;
+                }
+                rawMov.Normalize();
+                var movement = (rawMov * character.MaxMovement) * elapsedSeconds;
                 if (movement == Vector2.Zero)
                 {
                     continue;
