@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using ChasingGhosts.Windows.World;
+
 namespace ChasingGhosts.Windows.ViewModels
 {
     public class PlayerViewModel
@@ -14,8 +16,17 @@ namespace ChasingGhosts.Windows.ViewModels
 
         public bool IsAlive => this.Health > 0f;
 
+        public ShoeType ShoeType { get; set; } = ShoeType.Sneakers;
+
+        public bool IsInvulnerable { get; set; } = false;
+
         public void DamagePlayer(float damage)
         {
+            if (this.IsInvulnerable)
+            {
+                return;
+            }
+
             var oldHealth = this.Health;
             this.Health -= damage;
             if (this.Health <= 0 && oldHealth > 0)

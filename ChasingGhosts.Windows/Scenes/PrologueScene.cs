@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Media;
 
@@ -61,9 +62,7 @@ namespace ChasingGhosts.Windows.Scenes
         private async Task StartSequence(CancellationToken token)
         {
             const int SameLineMargin = 10;
-
-            MediaPlayer.Volume = .8f;
-
+            
             await this.Delay(1000, token);
             var lbl = this.CreateLabel("POST", Color.Gray);
             this.InsertLabelLine(lbl);
@@ -85,14 +84,21 @@ namespace ChasingGhosts.Windows.Scenes
             lbl.LocalPosition = new Vector2(lastLbl.LocalPosition.X + lastLblLength + SameLineMargin, lastLbl.LocalPosition.Y);
             await this.Delay(500, token);
 
-            var song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_launch");
-            MediaPlayer.Play(song);
+            SoundEffectInstance Load(string asset)
+            {
+                var inst = this.resolver.Resolve<ContentManager>().Load<SoundEffect>(asset).CreateInstance();
+                inst.Volume = .8f;
+                return inst;
+            }
+
+            var windowsLaunch = Load("Audio/windows_launch");
+            windowsLaunch.Play();
 
             lbl = this.CreateLabel("Loading operation instructions", Color.Gray);
             this.InsertLabelLine(lbl);
             await this.DelayDots(lbl, token);
 
-            song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_error");
+            var windowsError = Load("Audio/windows_error");
             lastLbl = lbl;
             lastLblLength = GetLabelLength(lastLbl);
             lbl = this.CreateLabel("SUCC", Color.Green);
@@ -100,8 +106,8 @@ namespace ChasingGhosts.Windows.Scenes
             await this.Delay(250, token);
             lbl.Text += ".-48tTQ#\"%rqawj912gGaf129'\"/";
             lbl.Tint = Color.IndianRed;
-            MediaPlayer.Stop();
-            MediaPlayer.Play(song);
+            windowsLaunch.Stop();
+            windowsError.Play();
 
             await this.Delay(1500, token);
 
@@ -116,15 +122,15 @@ namespace ChasingGhosts.Windows.Scenes
             await this.Delay(1500, token);
             lbl = this.CreateLabel("...", Color.Gray);
             this.InsertLabelLine(lbl);
-            song = this.resolver.Resolve<ContentManager>().Load<Song>("windows_bsod");
+            var windowsBsod = Load("Audio/windows_bsod");
             await this.Delay(500, token);
 
             lbl = this.CreateLabel("System restored!", Color.Green);
             this.InsertLabelLine(lbl);
 
-            MediaPlayer.Stop();
-            MediaPlayer.Play(song);
-            MediaPlayer.Volume = .25f;
+            windowsError.Stop();
+            windowsBsod.Volume = .25f;
+            windowsBsod.Play();
 
             await this.Delay(3000, token);
 

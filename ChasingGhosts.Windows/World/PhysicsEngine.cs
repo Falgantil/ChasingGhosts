@@ -17,8 +17,11 @@ namespace ChasingGhosts.Windows.World
         private readonly List<IMovableCharacter> characters = new List<IMovableCharacter>();
         private readonly List<IShoePrint> shoeprints = new List<IShoePrint>();
 
+        private IMusicManager musicManager;
+
         public override void Initialize(IResolver resolver)
         {
+            this.musicManager = resolver.Resolve<IMusicManager>();
             base.Initialize(resolver);
 
             this.Hook(this.Parent);
@@ -92,6 +95,7 @@ namespace ChasingGhosts.Windows.World
                 {
                     player.RefreshMovement();
                     print.Dismiss();
+                    this.musicManager.Transition(print.Level);
                 }
             }
         }
@@ -116,7 +120,11 @@ namespace ChasingGhosts.Windows.World
                 var startRegion = character.GlobalRegion;
 
                 CheckMovement(this.walls, startRegion, ref movement);
-                CheckMovement(this.characters.Where(c => c != character), startRegion, ref movement);
+
+                if (!(character is Player plr) || !plr.ViewModel.IsInvulnerable)
+                {
+                    CheckMovement(this.characters.Where(c => c != character), startRegion, ref movement);
+                }
 
                 character.LocalPosition += movement;
             }

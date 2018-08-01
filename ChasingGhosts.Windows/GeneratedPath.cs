@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.World;
 
 using Microsoft.Xna.Framework;
@@ -19,50 +20,50 @@ using Sharp2D.Engine.Infrastructure;
 
 namespace ChasingGhosts.Windows
 {
-    public class GeneratedPath : GameObject
-    {
-        private const int Distance = 250;
+    //public class GeneratedPath : GameObject
+    //{
+    //    private const int Distance = 250;
 
-        public override void Initialize(IResolver resolver)
-        {
-            GenerateDots(15);
+    //    public override void Initialize(IResolver resolver)
+    //    {
+    //        GenerateDots(15);
 
-            base.Initialize(resolver);
-        }
+    //        base.Initialize(resolver);
+    //    }
 
-        public GamePath CreatePath(Vector2 playerPosition)
-        {
-            var start = playerPosition - this.GlobalPosition;
+    //    public GamePath CreatePath(Vector2 playerPosition)
+    //    {
+    //        var start = playerPosition - this.GlobalPosition;
 
-            foreach (var gamePath in this.Children.OfType<GamePath>().ToArray())
-            {
-                this.Remove(gamePath);
-            }
+    //        foreach (var gamePath in this.Children.OfType<GamePath>().ToArray())
+    //        {
+    //            this.Remove(gamePath);
+    //        }
 
-            var path = new GamePath(GenerateDots(15).Select(v => start + v).ToArray());
-            this.Add(path);
-            return path;
-        }
+    //        var path = new GamePath(GenerateDots(15).Select(v => start + v).ToArray());
+    //        this.Add(path);
+    //        return path;
+    //    }
 
-        private static Vector2[] GenerateDots(int segments)
-        {
-            var dots = new List<Vector2>();
+    //    private static Vector2[] GenerateDots(int segments)
+    //    {
+    //        var dots = new List<Vector2>();
 
-            var rnd = new Random();
-            var rotation = rnd.Next(0, 360);
-            var currentPos = Vector2.Zero;
-            dots.Add(currentPos);
-            for (int i = 0; i < segments; i++)
-            {
-                currentPos += SharpMathHelper.Rotate(new Vector2(0, Distance), Vector2.Zero, rotation);
-                dots.Add(currentPos);
-                const int MaxRotation = 75;
-                rotation += rnd.Next(-MaxRotation, MaxRotation);
-            }
+    //        var rnd = new Random();
+    //        var rotation = rnd.Next(0, 360);
+    //        var currentPos = Vector2.Zero;
+    //        dots.Add(currentPos);
+    //        for (int i = 0; i < segments; i++)
+    //        {
+    //            currentPos += SharpMathHelper.Rotate(new Vector2(0, Distance), Vector2.Zero, rotation);
+    //            dots.Add(currentPos);
+    //            const int MaxRotation = 75;
+    //            rotation += rnd.Next(-MaxRotation, MaxRotation);
+    //        }
 
-            return dots.ToArray();
-        }
-    }
+    //        return dots.ToArray();
+    //    }
+    //}
 
     public class GamePath : GameObject
     {
@@ -92,7 +93,6 @@ namespace ChasingGhosts.Windows
                 const float Threshold = 40f;
                 while (Vector2.Distance(here, next) > Threshold)
                 {
-
                     var distance = next - here;
                     distance.Normalize();
                     distance *= Threshold;
@@ -103,6 +103,27 @@ namespace ChasingGhosts.Windows
                 }
             }
 
+            var prints = this.Children.OfType<ShoePrint>().ToArray();
+            var section = prints.Length/6f;
+            for (int i = 0; i < prints.Length; i++)
+            {
+                if (i >= section * 4f)
+                {
+                    prints[i].Level = 4;
+                }
+                if (i >= section * 3f)
+                {
+                    prints[i].Level = 3;
+                }
+                if (i >= section * 2f)
+                {
+                    prints[i].Level = 2;
+                }
+                if (i >= section * 1f)
+                {
+                    prints[i].Level = 1;
+                }
+            }
 
             base.Initialize(resolver);
         }
@@ -110,7 +131,7 @@ namespace ChasingGhosts.Windows
 
     public class ShoePrint : GameObject, IShoePrint
     {
-        private Sprite shoeSprite;
+        private readonly Sprite shoeSprite;
 
         public ShoePrint(Vector2 localPosition, float turnDegrees, ShoeFoot foot)
         {
@@ -141,6 +162,8 @@ namespace ChasingGhosts.Windows
             set => this.shoeSprite.Tint = value;
         }
 
+        public int Level { get; set; }
+
         public void Dismiss()
         {
             this.IsActive = false;
@@ -158,5 +181,7 @@ namespace ChasingGhosts.Windows
         void Dismiss();
 
         Rectanglef GlobalRegion { get; }
+
+        int Level { get; set; }
     }
 }

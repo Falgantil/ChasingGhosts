@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
+using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.UI;
 using ChasingGhosts.Windows.ViewModels;
 using ChasingGhosts.Windows.World;
@@ -11,12 +12,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 using Sharp2D.Engine.Common;
-using Sharp2D.Engine.Common.Components.Sprites;
+using Sharp2D.Engine.Common.Components;
+using Sharp2D.Engine.Common.Components.Audio;
 using Sharp2D.Engine.Common.Scene;
 using Sharp2D.Engine.Common.UI.Controls;
 using Sharp2D.Engine.Common.World.Camera;
 using Sharp2D.Engine.Infrastructure;
-using Sharp2D.Engine.Utility;
 
 namespace ChasingGhosts.Windows.Scenes
 {
@@ -28,6 +29,8 @@ namespace ChasingGhosts.Windows.Scenes
 
         private PlayerViewModel playerVm;
 
+        private IMusicManager musicManager;
+
         public GameScene(IResolver resolver)
             : base(resolver)
         {
@@ -37,17 +40,39 @@ namespace ChasingGhosts.Windows.Scenes
         public override async void Initialize(IResolver resolver)
         {
             this.playerVm = new PlayerViewModel();
-            this.playerVm.Dies += async (s, e) =>
-            {
-                await this.UiRoot.WaitForUpdate();
-                this.UiRoot.Add(new DeathScreen());
-            };
             this.InitWorld();
             this.InitUi();
+
+            this.musicManager = resolver.Resolve<IMusicManager>();
+            this.musicManager.LoadSongs("Audio/LOOP_1", "Audio/LOOP_2", "Audio/LOOP_3", "Audio/LOOP_4", "Audio/LOOP_5");
+            if (this.musicManager is Component musicComp)
+            {
+                this.WorldRoot.Components.Add(musicComp);
+            }
 
             base.Initialize(resolver);
 
             this.IsPaused = true;
+
+            this.playerVm.Dies += async (s, e) =>
+            {
+                await this.WaitForUpdate();
+                foreach (var npc in this.WorldRoot.Children.OfType<Npc>())
+                {
+                    npc.PlayerDied();
+                }
+
+                this.musicManager.EndSongs();
+                var shutdown = new AudioEffect("Audio/windows_shutdown")
+                {
+                    Volume = .75f
+                };
+                this.UiRoot.Components.Add(shutdown);
+                shutdown.Stopped += (_s, _e) => this.UiRoot.Components.Remove(shutdown);
+                shutdown.Play();
+                await this.player.PlayDeathAnimation();
+                this.UiRoot.Add(new DeathScreen());
+            };
 
             await Task.Delay(1500);
             await this.WaitForUpdate();
@@ -59,13 +84,6 @@ namespace ChasingGhosts.Windows.Scenes
         {
             var bar = new HealthBar(this.playerVm);
             this.UiRoot.Add(bar);
-
-            //var timer = new GameTimer(TimeSpan.FromSeconds(1))
-            //{
-            //    Looped = true
-            //};
-            //timer.Expired += (s, e) => this.playerVm.DamagePlayer(15);
-            //this.UiRoot.Components.Add(timer);
         }
 
         private void InitWorld()
@@ -79,15 +97,73 @@ namespace ChasingGhosts.Windows.Scenes
             };
             this.WorldRoot.Add(camera);
 
-            this.ShitsAndGiggles();
-
             this.AddFootprints();
+
+            this.AddNpcs(camera);
+
+            this.AddShoes(camera);
 
             this.WorldRoot.Add(this.player);
 
             this.physics = new PhysicsEngine();
             this.WorldRoot.Components.Add(this.physics);
         }
+
+        private void AddShoes(Camera camera)
+        {
+            var sneakers = new ShoePowerup
+            {
+                LocalPosition = Resolution.TransformPointToWorld(new Vector2(123f, 612f) * MapSize, camera),
+                Powerup = ShoeType.Sneakers
+            };
+            this.WorldRoot.Add(sneakers);
+
+            var rollerblades = new ShoePowerup
+            {
+                LocalPosition = Resolution.TransformPointToWorld(new Vector2(468f, 460f) * MapSize, camera),
+                Powerup = ShoeType.Rollerblades
+            };
+            this.WorldRoot.Add(rollerblades);
+
+            var flipflops = new ShoePowerup
+            {
+                LocalPosition = Resolution.TransformPointToWorld(new Vector2(890f, 597f) * MapSize, camera),
+                Powerup = ShoeType.FlipFlops
+            };
+            this.WorldRoot.Add(flipflops);
+        }
+
+        private void AddNpcs(Camera camera)
+        {
+            var positions = new[]
+            {
+                new Vector2(372f, 257f),
+                new Vector2(72f, 464f),
+                new Vector2(141f, 750f),
+                new Vector2(175f, 712f),
+                new Vector2(414f, 523f),
+                new Vector2(708f, 551f),
+                new Vector2(906f, 363f),
+                new Vector2(674f, 119f),
+                new Vector2(1102f, 171f),
+                new Vector2(1164f, 427f),
+                new Vector2(1249f, 598f),
+                new Vector2(1164f, 550f)
+            };
+
+            positions = positions.Select(v => Resolution.TransformPointToWorld(v * MapSize, camera)).ToArray();
+
+            foreach (var pos in positions)
+            {
+                var npc = new Npc(this.player, this.playerVm)
+                {
+                    LocalPosition = pos
+                };
+                this.WorldRoot.Add(npc);
+            }
+        }
+
+        private const float MapSize = 5f;
 
         private void AddFootprints()
         {
@@ -150,13 +226,8 @@ namespace ChasingGhosts.Windows.Scenes
                 new Vector2(1108f, 737f),
                 new Vector2(1066f, 757f)
             };
-
-            foreach (var p in path)
-            {
-                AddToPath(p);
-            }
-
-            path = path.Select(v => v * 5f).ToArray();
+            
+            path = path.Select(v => v * MapSize).ToArray();
 
             var gamePath = new GamePath(path);
 
@@ -165,43 +236,30 @@ namespace ChasingGhosts.Windows.Scenes
             gamePath.LocalPosition += diff;
         }
 
-        private void ShitsAndGiggles()
-        {
-            //this.WorldRoot.Add(new Wall { LocalPosition = new Vector2(-400, 0), Components = { new Sprite(Color.Green, 128, 128) } });
-            //this.WorldRoot.Add(new Wall { LocalPosition = new Vector2(-200, 0), Components = { new Sprite(Color.Green, 128, 128) } });
-
-            //var generatedPath = new GeneratedPath();
-            //this.WorldRoot.Add(generatedPath);
-            //generatedPath.CreatePath(this.player.GlobalPosition);
-
-            this.WorldRoot.Add(new Npc(this.player, this.playerVm)
-            {
-                LocalPosition = new Vector2(-100, -500)
-            });
-        }
-
         public override void Update(GameTime gameTime)
         {
-            this.WorldRoot.IsPaused = !this.playerVm.IsAlive;
-
-            if (InputManager.IsLeftButtonPressed)
-            {
-                var pos = InputManager.MousePosition;
-
-                Debug.WriteLine($"new Vector2({pos.X}f, {pos.Y}f),");
-
-                var print = this.AddToPath(pos);
-                print.Tint = Color.Red;
-            }
+            this.CheckPowerups();
 
             base.Update(gameTime);
         }
 
-        private ShoePrint AddToPath(Vector2 pos)
+        private void CheckPowerups()
         {
-            var shoePrint = new ShoePrint(pos, 0, ShoeFoot.Right);
-            this.UiRoot.Add(shoePrint);
-            return shoePrint;
+            var powerups = this.WorldRoot.Children.OfType<ShoePowerup>().ToArray();
+            foreach (var powerup in powerups)
+            {
+                var pos = powerup.GlobalPosition.ToPoint();
+                if (this.player.GlobalRegion.Contains(pos.X, pos.Y))
+                {
+                    var audio = new AudioEffect("Audio/newShoes");
+                    this.player.Components.Add(audio);
+                    audio.Play();
+                    audio.Stopped += (s, e) => this.player.Components.Remove(audio);
+                    this.player.EquipShoe(powerup.Powerup);
+                    powerup.Dismiss();
+                    break;
+                }
+            }
         }
     }
 }

@@ -73,13 +73,10 @@ namespace ChasingGhosts.Windows.UI
         {
             base.Draw(batch, time);
 
-            if (this.animHealth <= 0)
-            {
-                return;
-            }
             var screen = Resolution.VirtualScreen;
-            var perc = this.animHealth / 100f;
-            batch.Draw(this.text, new Rectangle(0, 0, (int)screen.X, (int)screen.Y), Color.DarkRed * (1f - perc) * .7f);
+            var perc = 1f - (this.animHealth / 100f);
+
+            batch.Draw(this.text, new Rectangle(0, 0, (int)screen.X, (int)screen.Y), Color.DarkRed * perc * .7f);
         }
     }
 }

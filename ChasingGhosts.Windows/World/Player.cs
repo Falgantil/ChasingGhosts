@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.ViewModels;
@@ -24,8 +25,6 @@ namespace ChasingGhosts.Windows.World
 {
     public class Player : GameObject, IMovableCharacter
     {
-        private readonly PlayerViewModel viewModel;
-
         private Vector2 oldMovement;
 
         private MovementSprite spriteWalk;
@@ -36,9 +35,13 @@ namespace ChasingGhosts.Windows.World
 
         private float topSpeed = 250;
 
+        private SpriteSheet<int> spriteDeath;
+
+        private bool canDash = true;
+
         public Player(PlayerViewModel viewModel)
         {
-            this.viewModel = viewModel;
+            this.ViewModel = viewModel;
             this.MaxMovement = this.topSpeed;
         }
 
@@ -63,6 +66,20 @@ namespace ChasingGhosts.Windows.World
             this.Components.Add(this.spriteWalk);
             this.spriteIdle.Start();
 
+            this.spriteDeath = new SpriteSheet<int>
+            {
+                Regions = new SpriteRegions<int>
+                {
+                    { 0, new SpriteFrame("player_dies", new Rectangle(0, 0, 48, 48)) },
+                    { 1, new SpriteFrame("player_dies", new Rectangle(48, 0, 48, 48)) },
+                    { 2, new SpriteFrame("player_dies", new Rectangle(96, 0, 48, 48)) },
+                },
+                IsVisible = false,
+                Scale = new Vector2(3f)
+            };
+            this.spriteDeath.CenterObject();
+            this.Components.Add(this.spriteDeath);
+
             this.speedReducer = new EventValueAnimator(TimeSpan.FromSeconds(5));
             this.speedReducer.ValueUpdated += (s, perc) =>
             {
@@ -76,7 +93,7 @@ namespace ChasingGhosts.Windows.World
             base.Initialize(resolver);
 
             this.Direction = World.Movement.Down;
-            this.EquipShoe(ShoeType.FlipFlops);
+            this.EquipShoe(this.ViewModel.ShoeType);
         }
 
         public Movement Direction { get; private set; }
@@ -85,40 +102,109 @@ namespace ChasingGhosts.Windows.World
 
         public Vector2 Movement { get; private set; }
 
+        public PlayerViewModel ViewModel { get; }
+
         public override void Update(GameTime time)
         {
             base.Update(time);
 
+            if (!this.ViewModel.IsAlive)
+            {
+                this.Movement = Vector2.Zero;
+                return;
+            }
+
             this.HandleMovement(time);
 
             this.HandleHealth(time);
+
+            this.HandleDash(time);
+        }
+
+        private void HandleDash(GameTime time)
+        {
+            if (this.ViewModel.ShoeType != ShoeType.Sneakers)
+            {
+                return;
+            }
+
+            if (!this.canDash)
+            {
+                return;
+            }
+
+            if (!TriggerDash())
+            {
+                return;
+            }
+
+            this.canDash = false;
+            this.ViewModel.IsInvulnerable = true;
+            this.topSpeed = 700f;
+            this.RefreshMovement();
+            var duration = new GameTimer(TimeSpan.FromSeconds(.35f));
+            duration.Expired += (s, e) =>
+            {
+                this.ViewModel.IsInvulnerable = false;
+                this.SetShoeSpeed();
+                this.Components.Remove(duration);
+            };
+            this.Components.Add(duration);
+
+            var cooldown = new GameTimer(TimeSpan.FromSeconds(3f));
+            cooldown.Expired += (s, e) =>
+            {
+                this.canDash = true;
+                this.Components.Remove(cooldown);
+            };
+            this.Components.Add(cooldown);
+        }
+
+        private static bool TriggerDash()
+        {
+            if (InputManager.IsKeyPressed(Keys.Space))
+            {
+                return true;
+            }
+
+            if (InputManager.IsRightButtonPressed)
+            {
+                return true;
+            }
+
+            if (GamePadManager.IsButtonPressed(Buttons.A))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void HandleHealth(GameTime time)
         {
-            if (this.ShoeType != ShoeType.FlipFlops)
+            if (this.ViewModel.ShoeType != ShoeType.FlipFlops)
             {
                 return;
             }
 
-            if (this.viewModel.Health >= 100)
+            if (this.ViewModel.Health >= 100)
             {
                 return;
             }
 
-            this.viewModel.HealPlayer((float)time.ElapsedGameTime.TotalSeconds * 3);
+            this.ViewModel.HealPlayer((float)time.ElapsedGameTime.TotalSeconds * 3);
         }
 
         private void HandleMovement(GameTime time)
         {
-            var movement = this.ShoeType == ShoeType.Rollerblades ? this.Movement : Vector2.Zero;
+            var movement = this.ViewModel.ShoeType == ShoeType.Rollerblades ? this.Movement : Vector2.Zero;
 
             this.HandleKeyboard(ref movement, time);
             this.HandleGamepad(ref movement, time);
             this.HandleCursor(ref movement, time);
             this.oldMovement = this.Movement;
             this.Movement = movement;
-            if (this.ShoeType == ShoeType.Rollerblades && movement != Vector2.Zero && Vector2.Distance(movement, Vector2.Zero) > 2)
+            if (this.ViewModel.ShoeType == ShoeType.Rollerblades && movement != Vector2.Zero && Vector2.Distance(movement, Vector2.Zero) > 2)
             {
                 movement.Normalize();
                 movement *= 2;
@@ -145,7 +231,7 @@ namespace ChasingGhosts.Windows.World
                 return;
             }
 
-            if (this.ShoeType == ShoeType.Rollerblades)
+            if (this.ViewModel.ShoeType == ShoeType.Rollerblades)
                 m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
 
             movement += m;
@@ -160,7 +246,7 @@ namespace ChasingGhosts.Windows.World
                 return;
             }
 
-            if (this.ShoeType == ShoeType.Rollerblades)
+            if (this.ViewModel.ShoeType == ShoeType.Rollerblades)
                 m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
 
             movement += m;
@@ -196,7 +282,7 @@ namespace ChasingGhosts.Windows.World
 
             m.Normalize();
 
-            if (this.ShoeType == ShoeType.Rollerblades)
+            if (this.ViewModel.ShoeType == ShoeType.Rollerblades)
                 m *= RollerbladeDelay * (float)time.ElapsedGameTime.TotalSeconds;
 
             movement += m;
@@ -243,8 +329,15 @@ namespace ChasingGhosts.Windows.World
 
         public void EquipShoe(ShoeType type)
         {
-            this.ShoeType = type;
-            switch (type)
+            this.ViewModel.ShoeType = type;
+
+            this.SetShoeSpeed();
+            this.RefreshMovement();
+        }
+
+        private void SetShoeSpeed()
+        {
+            switch (this.ViewModel.ShoeType)
             {
                 case ShoeType.None:
                     this.topSpeed = 225;
@@ -259,10 +352,29 @@ namespace ChasingGhosts.Windows.World
                     this.topSpeed = 200;
                     break;
             }
-            this.RefreshMovement();
         }
 
-        public ShoeType ShoeType { get; private set; }
+        public async Task PlayDeathAnimation()
+        {
+            this.spriteWalk.IsVisible = false;
+            this.spriteIdle.IsVisible = false;
+            this.Components.Remove(this.spriteWalk);
+            this.Components.Remove(this.spriteIdle);
+
+            this.spriteDeath.IsVisible = true;
+            this.spriteDeath.RegionKey = 0;
+
+            await Task.Delay(500);
+            await this.WaitForUpdate();
+            this.spriteDeath.RegionKey = 1;
+
+            await Task.Delay(500);
+            await this.WaitForUpdate();
+            this.spriteDeath.RegionKey = 2;
+
+            await Task.Delay(1000);
+            await this.WaitForUpdate();
+        }
     }
 
     public enum ShoeType
@@ -407,6 +519,7 @@ namespace ChasingGhosts.Windows.World
                 {
                     return;
                 }
+
                 var keys = this.sheet.Groups[key];
                 var index = (int)(val * keys.Count);
                 index = Math.Min(keys.Count - 1, index);

@@ -1,6 +1,8 @@
 ﻿using System;
 
+using ChasingGhosts.Windows.Interfaces;
 using ChasingGhosts.Windows.Scenes;
+using ChasingGhosts.Windows.Services;
 
 using Microsoft.Xna.Framework;
 
@@ -33,6 +35,13 @@ namespace ChasingGhosts.Windows
             : base(resolver)
         {
 
+        }
+
+        protected override void RegisterServices()
+        {
+            base.RegisterServices();
+
+            this.Resolver.Register<IMusicManager, MusicManager>();
         }
 
         public override IGameHost CreateGame(SharpGameManager gameManager)
