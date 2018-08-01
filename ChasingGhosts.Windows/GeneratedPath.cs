@@ -104,22 +104,22 @@ namespace ChasingGhosts.Windows
             }
 
             var prints = this.Children.OfType<ShoePrint>().ToArray();
-            var section = prints.Length/6f;
+            var section = prints.Length/5f;
             for (int i = 0; i < prints.Length; i++)
             {
                 if (i >= section * 4f)
                 {
                     prints[i].Level = 4;
                 }
-                if (i >= section * 3f)
+                else if (i >= section * 3f)
                 {
                     prints[i].Level = 3;
                 }
-                if (i >= section * 2f)
+                else if (i >= section * 2f)
                 {
                     prints[i].Level = 2;
                 }
-                if (i >= section * 1f)
+                else if (i >= section * 1f)
                 {
                     prints[i].Level = 1;
                 }

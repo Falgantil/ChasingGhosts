@@ -164,3 +164,10 @@
 /processorParam:Quality=Best
 /build:Audio/windows_shutdown.mp3
 
+#begin DefaultFont24.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:DefaultFont24.spritefont
+

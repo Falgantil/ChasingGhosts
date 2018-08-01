@@ -16,8 +16,10 @@ using Sharp2D.Engine.Common.Components;
 using Sharp2D.Engine.Common.Components.Audio;
 using Sharp2D.Engine.Common.Scene;
 using Sharp2D.Engine.Common.UI.Controls;
+using Sharp2D.Engine.Common.UI.Enums;
 using Sharp2D.Engine.Common.World.Camera;
 using Sharp2D.Engine.Infrastructure;
+using Sharp2D.Engine.Utility;
 
 namespace ChasingGhosts.Windows.Scenes
 {
@@ -30,6 +32,10 @@ namespace ChasingGhosts.Windows.Scenes
         private PlayerViewModel playerVm;
 
         private IMusicManager musicManager;
+
+        private Label lblScore;
+
+        private int score;
 
         public GameScene(IResolver resolver)
             : base(resolver)
@@ -71,7 +77,7 @@ namespace ChasingGhosts.Windows.Scenes
                 shutdown.Stopped += (_s, _e) => this.UiRoot.Components.Remove(shutdown);
                 shutdown.Play();
                 await this.player.PlayDeathAnimation();
-                this.UiRoot.Add(new DeathScreen());
+                this.UiRoot.Insert(0, new DeathScreen());
             };
 
             await Task.Delay(1500);
@@ -82,6 +88,20 @@ namespace ChasingGhosts.Windows.Scenes
 
         private void InitUi()
         {
+            var fontDef = new FontDefinition("DefaultFont24", 24);
+            this.lblScore = new Label(fontDef)
+            {
+                FontSize = 24,
+                Text = $"Score: {this.score}",
+                Alignment = TextAlignment.Center,
+                LocalPosition = new Vector2(Resolution.VirtualScreen.X / 2, 50),
+                DropShadowOffset = new Vector2(2, 1),
+                DropShadowTint = Color.White,
+                DropShadowOpacity = .6f,
+                HasDropShadow = true
+            };
+            this.UiRoot.Add(this.lblScore);
+
             var bar = new HealthBar(this.playerVm);
             this.UiRoot.Add(bar);
         }
@@ -106,6 +126,7 @@ namespace ChasingGhosts.Windows.Scenes
             this.WorldRoot.Add(this.player);
 
             this.physics = new PhysicsEngine();
+            this.physics.RemovedFootprint += (s, e) => this.score += 10;
             this.WorldRoot.Components.Add(this.physics);
         }
 
@@ -226,7 +247,7 @@ namespace ChasingGhosts.Windows.Scenes
                 new Vector2(1108f, 737f),
                 new Vector2(1066f, 757f)
             };
-            
+
             path = path.Select(v => v * MapSize).ToArray();
 
             var gamePath = new GamePath(path);
@@ -240,8 +261,12 @@ namespace ChasingGhosts.Windows.Scenes
         {
             this.CheckPowerups();
 
+            this.lblScore.Text = $"Score: {this.GetScore()}";
+
             base.Update(gameTime);
         }
+
+        private float GetScore() => this.score - (int)(100f - this.playerVm.Health);
 
         private void CheckPowerups()
         {

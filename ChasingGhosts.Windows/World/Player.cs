@@ -192,7 +192,7 @@ namespace ChasingGhosts.Windows.World
                 return;
             }
 
-            this.ViewModel.HealPlayer((float)time.ElapsedGameTime.TotalSeconds * 3);
+            this.ViewModel.HealPlayer((float)time.ElapsedGameTime.TotalSeconds * 4);
         }
 
         private void HandleMovement(GameTime time)

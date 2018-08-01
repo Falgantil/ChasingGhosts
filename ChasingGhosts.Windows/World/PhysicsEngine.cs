@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using ChasingGhosts.Windows.Interfaces;
@@ -96,9 +97,12 @@ namespace ChasingGhosts.Windows.World
                     player.RefreshMovement();
                     print.Dismiss();
                     this.musicManager.Transition(print.Level);
+                    this.RemovedFootprint?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
+
+        public event EventHandler RemovedFootprint;
 
         private void HandleMovement(GameTime time)
         {

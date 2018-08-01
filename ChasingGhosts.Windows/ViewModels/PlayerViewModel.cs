@@ -16,7 +16,7 @@ namespace ChasingGhosts.Windows.ViewModels
 
         public bool IsAlive => this.Health > 0f;
 
-        public ShoeType ShoeType { get; set; } = ShoeType.Sneakers;
+        public ShoeType ShoeType { get; set; } = ShoeType.None;
 
         public bool IsInvulnerable { get; set; } = false;
 
